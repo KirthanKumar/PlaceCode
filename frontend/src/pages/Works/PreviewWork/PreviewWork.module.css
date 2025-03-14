@@ -1,0 +1,11 @@
+.previewWork {
+  display: grid;
+  gap: 1rem;
+  width: 70%;
+  padding: 1rem;
+}
+
+.previewWork h2,
+.previewWork h3 {
+  margin: 0;
+}

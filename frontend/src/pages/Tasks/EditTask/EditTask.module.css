@@ -1,0 +1,57 @@
+.editTask {
+  display: grid;
+  gap: 1rem;
+  width: 70%;
+  padding: 1rem;
+}
+
+.editTask h2,
+.editTask h3 {
+  margin: 0;
+}
+
+.editForm {
+  display: grid;
+  grid-template-columns: 1fr 15rem;
+  gap: 1rem;
+}
+
+.editForm > * {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.editForm > *:nth-child(1) {
+  grid-column-start: 1;
+  grid-column-end: 2;
+}
+
+.editForm > *:nth-child(2) {
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.testsControl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editControl {
+  display: flex;
+  align-items: center;
+}
+
+.editControl > h3 {
+  margin-left: -1rem;
+}
+
+.editControl > span {
+  margin-right: 0.5rem;
+}

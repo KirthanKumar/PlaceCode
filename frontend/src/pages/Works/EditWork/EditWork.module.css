@@ -1,0 +1,23 @@
+.editWork {
+  display: grid;
+  gap:1rem;
+  width: 50%;
+  padding: 1rem;
+}
+
+.editWork h2,
+.editWork h3 {
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}

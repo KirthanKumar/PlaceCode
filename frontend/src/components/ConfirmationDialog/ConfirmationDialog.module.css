@@ -1,0 +1,23 @@
+.dialog {
+  text-align: center;
+  padding: 1.2rem;
+  min-width: 20rem;
+  max-width: 24rem;
+}
+
+.content {
+  padding: 0.5rem 0;
+}
+
+.dialog > h3 {
+  margin: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.actions > * {
+  margin: 0 0.5rem !important;
+}

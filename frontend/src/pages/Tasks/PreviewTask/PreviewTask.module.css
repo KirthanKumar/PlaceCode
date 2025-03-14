@@ -1,0 +1,51 @@
+.preview {
+  --previewGap: 1rem;
+  width: 70%;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--previewGap);
+}
+
+.previewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previewHeader > h2 {
+  margin: 0;
+}
+
+.taskPreview {
+  display: grid;
+  gap: var(--previewGap);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.testList {
+  display: grid;
+  gap: 1rem;
+}
+
+.test {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  white-space: pre-wrap;
+}
+
+.test > *:nth-child(3) {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.test span {
+  display: block;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}

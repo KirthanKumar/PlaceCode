@@ -1,0 +1,14 @@
+.codeEditor {
+  display: grid;
+  grid-template-rows: min-content min-content 1fr;
+  padding: 0;
+}
+
+.editorControl {
+  display: grid;
+  grid-template-columns: repeat(2, 7rem);
+  grid-template-rows: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+}

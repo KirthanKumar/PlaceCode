@@ -1,0 +1,44 @@
+.addTask {
+  display: grid;
+  gap: 1rem;
+  width: 70%;
+  padding: 1rem;
+}
+
+.addTask h2,
+.addTask h3 {
+  margin: 0;
+}
+
+.addForm {
+  display: grid;
+  grid-template-columns: 1fr 15rem;
+  gap: 1rem;
+}
+
+.addForm > * {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.addForm > *:nth-child(1) {
+  grid-column-start: 1;
+  grid-column-end: 2;
+}
+
+.addForm > *:nth-child(2) {
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.testsControl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

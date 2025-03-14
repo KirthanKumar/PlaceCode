@@ -1,0 +1,23 @@
+table.table {
+  width: 20%;
+  max-width: 300px;
+  min-width: 250px;
+}
+
+.title {
+  font-size: 1.2rem;
+}
+
+.row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.head th {
+  font-weight: 600;
+}
+
+.rowActions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}

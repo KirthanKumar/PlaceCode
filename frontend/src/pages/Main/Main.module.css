@@ -1,0 +1,10 @@
+.mainPage {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  width: 50%;
+}
+
+.mainPage > h3 {
+  margin: 0.5rem 0;
+}
