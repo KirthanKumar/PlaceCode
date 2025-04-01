@@ -1,17 +1,14 @@
-import React, { SetStateAction, useEffect, useRef } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import ProblemNavbar from "../components/ProblemNavbar";
+import ProblemDescription from "../components/ProblemDescription";
 import ReactCodeMirror from "@uiw/react-codemirror";
 import { loadLanguage } from "@uiw/codemirror-extensions-langs";
 import { tokyoNight } from "@uiw/codemirror-theme-tokyo-night";
-import axios, { AxiosError, AxiosResponse } from "axios";
-import ProblemNavbar from "../components/ProblemNavbar";
-import ProblemDescription from "../components/ProblemDescription";
-import { useNavigate, useParams } from "react-router-dom";
-import Editorial from "../components/Editorial";
-import MainHeading from "../components/MainHeading";
-import Submissions from "../components/Submissions";
 import { API_URL } from "../App";
 import Loading from "../components/Loading";
+import MainHeading from "../components/MainHeading";
 
 const ProblemPage = ({
     data,
@@ -22,244 +19,107 @@ const ProblemPage = ({
     token: string | null;
     id: string | null;
 }) => {
-    const [username, setUsername] = useState<string>("");
-    const [initCode, setInitCode] = useState<string>("");
+    const [keystrokeIntervals, setKeystrokeIntervals] = useState<number[]>([]);
+    const [lastKeyTime, setLastKeyTime] = useState<number>(0);
     const [code, setCode] = useState<string>("");
-    const explanationRef = useRef<HTMLDivElement>(null);
-    const sliderRef = useRef<HTMLDivElement>(null);
-    const [currentLang, setCurrentLang] = useState<string>("javascript");
-    const handleSlider = (event: React.MouseEvent<HTMLDivElement>) => {
-        const mouseX = event.clientX;
-        const newWidth = mouseX - 8;
-        if (explanationRef.current)
-            explanationRef.current.style.width = newWidth + "px";
-    };
 
-    const [isSubmitLoading, setIsSubmitLoading] = useState<boolean>(false);
-
-    const [editorial, setEditorial] = useState<string>("");
-
-    const activeNavOption = data?.activeNavOption || "description";
-
-    const [problemDescriptionData, setProblemDescriptionData] =
-        useState<DescriptionData>();
-
-    const [submissionData, setSubmissionData] = useState<Submission[]>();
+    const [problemDescriptionData, setProblemDescriptionData] = useState<DescriptionData>();
     const navigate = useNavigate();
-
-    const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-
     const { name } = useParams();
 
-    const submitCode = () => {
-        setIsSubmitLoading(true);
-        if (!id || !name) {
-            console.log("id not found");
-            setIsSubmitLoading(false);
-            return;
+    // Automated typing detection logic
+    const detectAutomatedTyping = () => {
+        if (keystrokeIntervals.length < 5) return;
+        const mean = keystrokeIntervals.reduce((a, b) => a + b, 0) / keystrokeIntervals.length;
+        const variance =
+            keystrokeIntervals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / keystrokeIntervals.length;
+        // Adjust this threshold if needed
+        if (variance < 20) {
+            alert("Automated typing detected. Ending test.");
+            navigate("/sorry");
         }
+    };
 
-        const problem_name = name;
-        axios
-            .post<
-                {},
-                { data: Submission[] },
-                { code: string; id: string; problem_name: string }
-            >(`${API_URL}/api/problem/submit/${name}`, {
-                code,
-                id,
-                problem_name,
-            })
-            .then(({ data }) => {
-                setIsSubmitted(true);
-                setSubmissionData(data);
-                navigate(`/problem/${name}/submissions`);
-                setIsSubmitLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setIsSubmitLoading(false);
-                setIsSubmitted(true);
-            });
+    // Handle keydown events for typing detection
+    const handleKeyDown = (e: KeyboardEvent) => {
+        const currentTime = Date.now();
+        if (lastKeyTime) {
+            setKeystrokeIntervals((prev) => [...prev, currentTime - lastKeyTime]);
+        }
+        setLastKeyTime(currentTime);
+        detectAutomatedTyping();
+    };
+
+    // Detect tab switching
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            alert("Tab switched. Ending test.");
+            navigate("/sorry");
+        }
     };
 
     useEffect(() => {
-        axios
-            .post(`${API_URL}/api/problem/${name}`, { id: id })
-            .then(({ data }) => {
-                setProblemDescriptionData(
-                    data.main as unknown as SetStateAction<
-                        DescriptionData | undefined
-                    >
-                );
-                if (
-                    "code_body" in data.main &&
-                    "javascript" in data.main.code_body
-                ) {
-                    setInitCode(
-                        data.main.code_body.javascript as unknown as string
-                    );
-                }
-            })
-            .catch((e) => console.error(e));
+        // Add keydown event listener to detect keystrokes
+        document.addEventListener("keydown", handleKeyDown);
 
-        if (!token) return;
+        // Add visibilitychange event listener to detect tab switching
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
-        axios
-            .get(`${API_URL}/api/accounts/id/${id}`, {
-                headers: {
-                    Authorization: token,
-                },
-            })
-            .then(({ data }) => {
-                setUsername(data.username);
-            })
-            .catch((e: AxiosError) => {
-                console.log(e);
-                navigate("/sorry");
-            });
-
-        if (!id || !name) {
-            console.log("id not found");
-            return;
-        }
-        axios
-            .post<{}, { data: Submission[] }, { id: string }>(
-                `${API_URL}/api/problem/submissions/${name}`,
-                { id: id || "" }
-            )
-            .then(({ data }) => {
-                if (data.length !== 0) {
-                    setCode(data[0].code_body);
-                }
-                setSubmissionData(data);
-            })
-            .catch((e) => console.log(e));
-    }, []);
+        // Cleanup event listeners when the component is unmounted
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [lastKeyTime, keystrokeIntervals]);
 
     useEffect(() => {
-        if (activeNavOption === "description") return;
-
+        // Fetch problem data and initialize code
         axios
-            .get(`${API_URL}/api/problem/${name}/${activeNavOption}`)
+            .post(`${API_URL}/api/problem/${name}`, { id })
             .then(({ data }) => {
-                if (activeNavOption === "editorial") {
-                    if ("editorial_body" in data) {
-                        setEditorial(data.editorial_body);
-                    }
+                setProblemDescriptionData(data.main);
+                if (data.main.code_body?.javascript) {
+                    setCode(data.main.code_body.javascript);
                 }
             })
-            .catch((e) => console.error(e));
-    }, [activeNavOption]);
+            .catch(console.error);
+    }, [id, name]);
 
     return (
         <>
             <MainHeading
                 data={{
                     items: [{ text: "Problem List", link_path: "/problemset" }],
-                    username: username,
+                    username: "user", // Or fetch from API if needed
                 }}
             />
             <div className="h-[calc(100vh-60px)] overflow-hidden bg-black">
-                <div
-                    id="cont"
-                    className="relative flex flex-row h-[calc(100vh-60px)] w-full mt-[8px] "
-                >
+                <div className="relative flex flex-row h-full w-full mt-2">
                     <div
                         id="explanation"
-                        className="h-[calc(100%-16px)] bg-black border border-borders ml-[8px] rounded-lg w-[50%] overflow-hidden"
-                        ref={explanationRef}
+                        className="h-full bg-black border ml-2 rounded-lg w-1/2 overflow-hidden"
                     >
-                        <div className="relative w-full bg-black h-[50px] rounded-t-lg overflow-hidden border-b border-borders box-content">
-                            {name != undefined && (
-                                <ProblemNavbar
-                                    data={{
-                                        problem_name: name,
-                                        nav_option_name: activeNavOption,
-                                    }}
-                                />
-                            )}
-                        </div>
+                        <ProblemNavbar
+                            data={{ problem_name: name ?? "Unknown Problem", nav_option_name: "description" }}
+                        />
                         <div className="description-body relative w-full h-[calc(100%-50px)] overflow-y-auto bg-black">
-                            {problemDescriptionData != undefined &&
-                            activeNavOption === "description" ? (
-                                <>
-                                    <ProblemDescription
-                                        data={problemDescriptionData}
-                                    />
-                                </>
-                            ) : activeNavOption === "description" ? (
+                            {problemDescriptionData ? (
+                                <ProblemDescription data={problemDescriptionData} />
+                            ) : (
                                 <Loading For="pDescription" />
-                            ) : (
-                                <></>
                             )}
-                            {activeNavOption === "editorial" &&
-                            editorial != "" ? (
-                                <Editorial data={editorial} />
-                            ) : activeNavOption === "editorial" ? (
-                                <Loading For="pEditorial" />
-                            ) : (
-                                <></>
-                            )}
-                            {activeNavOption === "submissions" &&
-                                submissionData != undefined && (
-                                    <Submissions
-                                        data={{
-                                            submissions_list: submissionData,
-                                            is_submitted: isSubmitted,
-                                        }}
-                                    />
-                                )}
                         </div>
                     </div>
-                    <div
-                        id="slider"
-                        className="w-[8px] h-[calc(100%-16px)] rounded-lg hover:bg-blue-800 hover:cursor-col-resize transition active:bg-blue-800 active:cursor-col-resize"
-                        onDrag={handleSlider}
-                        ref={sliderRef}
-                        draggable="true"
-                    ></div>
-                    <div className="flex flex-col h-[calc(100%-16px)] min-w-[calc(20%-8px)] mr-[8px] flex-grow">
-                        <div className="min-h-0 flex-grow min-w-full mr-[8px] mb-[8px] rounded-lg overflow-hidden bg-black border border-borders">
-                            <div className="h-[50px] bg-black relative border-b border-borders">
-                                <div className=" inline-block relative w-fit h-fit rounded-md ml-[13px] top-[8px] px-[6px] py-[6px] text-text_2 hover:text-white cursor-pointer text-[14px] transition select-none">
-                                    {currentLang}
-                                </div>
-                            </div>
-                            <ReactCodeMirror
-                                value={
-                                    code === "" || code == null
-                                        ? initCode || ""
-                                        : code || ""
-                                }
-                                extensions={[loadLanguage("javascript")!]}
-                                theme={tokyoNight}
-                                onChange={(value) => {
-                                    setCode(value);
-                                }}
-                                width="100%"
-                                height="100%"
-                            />
-                        </div>
-                        <div
-                            id="console"
-                            className="flex justify-end items-center bg-black w-full h-[50px] rounded-lg overflow-hidden border border-borders"
-                        >
-                            <div
-                                className="w-fit h-fit rounded mr-[11px] px-[20px] py-[4px] hover:bg-green-500 cursor-pointer hover:text-black text-black bg-green-500 text-[14px] active:border-green-800 active:bg-green-800 border-green-500 font-bold right-0 transition select-none"
-                                onClick={submitCode}
-                            >
-                                {isSubmitLoading ? (
-                                    <div className="w-full block h-[21px]">
-                                        <div className="">
-                                            <Loading />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    "Submit"
-                                )}
-                            </div>
-                        </div>
+
+                    <div className="flex flex-col h-full w-1/2">
+                        <ReactCodeMirror
+                            value={code}
+                            extensions={[loadLanguage("javascript")!]}
+                            theme={tokyoNight}
+                            onChange={(value) => setCode(value)}
+                            width="100%"
+                            height="100%"
+                        />
                     </div>
                 </div>
             </div>
